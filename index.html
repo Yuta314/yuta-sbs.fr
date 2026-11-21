@@ -31,6 +31,12 @@ small{opacity:.7}
 #ae{color:var(--y);min-height:20px}
 #ann{position:fixed;top:0;left:0;right:0;background:#fff;color:#111;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;font-size:15px;font-weight:600;text-align:center;z-index:6;display:none;box-shadow:0 2px 10px rgba(0,0,0,.45)}
 #ann b{color:#d1005e}
+#tp{position:fixed;left:0;right:0;bottom:14px;display:none;justify-content:space-between;padding:0 14px;z-index:9;pointer-events:none}
+#tp .g{display:flex;flex-direction:column;align-items:center;gap:10px}
+#tp .r{display:flex;gap:10px}
+#tp button{width:72px;height:72px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.22);color:#fff;font:bold 24px system-ui;pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none}
+#tp button:active{background:rgba(255,255,255,.5)}
+@media (hover:none) and (pointer:coarse){#tp{display:flex}}
 </style></head><body>
 <div id="hud"><div id="tbox"><span id="ht">60.00</span></div><span id="hs">0</span><span id="hc">🪙 0</span></div>
 <div id="toast"></div>
@@ -64,6 +70,7 @@ small{opacity:.7}
 <div class="ov" id="end"><div class="box"><h1>GAME OVER</h1><p id="er" style="text-align:center;font-size:20px"></p><button class="b" onclick="play()">Rejouer</button><button onclick="menu()">Menu</button></div></div>
 <div class="ov" id="adm"><div class="box"></div></div>
 
+<div id="tp"><div class="g"><button id="bw">W</button></div><div class="r"><button id="ba">A</button><button id="bs">S</button><button id="bd">D</button></div></div>
 <div id="cd" style="display:none;position:fixed;top:30%;left:0;right:0;text-align:center;font-size:44px;font-weight:bold;color:#ffb000;text-shadow:0 0 16px #ff4d00;z-index:8;pointer-events:none"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -202,7 +209,16 @@ const MAPS={
 };
 function mkWM(cols){return cols.map(c=>{const k=document.createElement('canvas');k.width=32;k.height=64;const g=k.getContext('2d');g.fillStyle='#120a26';g.fillRect(0,0,32,64);for(let y=2;y<64;y+=8)for(let x=2;x<32;x+=8)if(Math.random()<.45){g.fillStyle=Math.random()<.7?'#'+c.toString(16).padStart(6,'0'):'#fff';g.fillRect(x,y,4,5)}return new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(k)})})}
 let wm=mkWM(MAPS.tokyo.cols);
-function applyMap(id){const m=MAPS[id]||MAPS.tokyo;S.background.set(m.bg);S.fog.color.set(m.fog);q.fillStyle=m.road;q.fillRect(0,0,128,128);q.fillStyle=m.line;q.fillRect(43,0,3,70);q.fillRect(82,0,3,70);rt.needsUpdate=true;sun.material.color.set(m.sun);wm=mkWM(m.cols);B.forEach(b=>{if(b.isMesh)b.material=wm[Math.floor(Math.random()*3)]})}
+let deco=null;
+function mkEiffel(){const g=new THREE.Group(),m=new THREE.MeshLambertMaterial({color:0x9aa0b8}),m2=new THREE.MeshBasicMaterial({color:0xffd23f});
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(.5,2.6,11,4),m);base.position.y=5.5;g.add(base);
+ const mid=new THREE.Mesh(new THREE.CylinderGeometry(.35,1.2,5,4),m);mid.position.y=13.5;g.add(mid);
+ const top=new THREE.Mesh(new THREE.CylinderGeometry(.15,.4,4,4),m);top.position.y=18.5;g.add(top);
+ const lamp=new THREE.Mesh(new THREE.SphereGeometry(.25,8,6),m2);lamp.position.y=21;g.add(lamp);
+ return g}
+function setDeco(id){if(deco){S.remove(deco);B.splice(B.indexOf(deco),1);deco=null}
+ if(id!='france')return;deco=mkEiffel();deco.position.set(-13,0,-70);S.add(deco);B.push(deco)}
+function applyMap(id){setDeco(id);const m=MAPS[id]||MAPS.tokyo;S.background.set(m.bg);S.fog.color.set(m.fog);q.fillStyle=m.road;q.fillRect(0,0,128,128);q.fillStyle=m.line;q.fillRect(43,0,3,70);q.fillRect(82,0,3,70);rt.needsUpdate=true;sun.material.color.set(m.sun);wm=mkWM(m.cols);B.forEach(b=>{if(b.isMesh)b.material=wm[Math.floor(Math.random()*3)]})}
 const B=[];
 for(let i=0;i<20;i++)for(const s of[-1,1]){const w=3+Math.random()*3,h=8+Math.random()*16,b=new THREE.Mesh(new THREE.BoxGeometry(w,h,8),wm[Math.floor(Math.random()*3)]);b.position.set(s*(4.4+w/2),h/2,-i*10);S.add(b);B.push(b)}
 // torii
@@ -266,6 +282,8 @@ addEventListener('keydown',e=>{
 });
 let tx=0,ty=0;
 addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+const tb=(id,fn)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();fn()},{passive:false});b.addEventListener('mousedown',fn)};
+tb('bw',jump);tb('bs',slide);tb('ba',()=>mv(-1));tb('bd',()=>mv(1));
 addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;if(Math.abs(dx)<25&&Math.abs(dy)<25)return;click();if(Math.abs(dx)>Math.abs(dy))mv(dx>0?1:-1);else dy<0?jump():slide()});
 
 function loop(now){
