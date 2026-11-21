@@ -64,6 +64,7 @@ small{opacity:.7}
 <div class="ov" id="end"><div class="box"><h1>GAME OVER</h1><p id="er" style="text-align:center;font-size:20px"></p><button class="b" onclick="play()">Rejouer</button><button onclick="menu()">Menu</button></div></div>
 <div class="ov" id="adm"><div class="box"></div></div>
 
+<div id="cd" style="display:none;position:fixed;top:30%;left:0;right:0;text-align:center;font-size:44px;font-weight:bold;color:#ffb000;text-shadow:0 0 16px #ff4d00;z-index:8;pointer-events:none"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const $=id=>document.getElementById(id),K='yutasbs_v1';
@@ -151,16 +152,18 @@ function toggleAdm(){
  prev=document.querySelector('.ov.on');prev&&prev.classList.remove('on');
  if(st=='play')st='paused';admR();a.classList.add('on');
 }
-function admR(){
+let JF='';
+function jlist(){$('jl').innerHTML=joueursHTML()}
+function admR(){JF='';
  const t=DB.t.find(x=>x.id==DB.ct);
  const bx=$('adm').firstElementChild;bx.style.position='relative';bx.innerHTML='<button onclick="toggleAdm()" style="position:absolute;top:8px;right:8px;width:auto;margin:0;padding:4px 10px;z-index:2">✕</button><h1>ADMIN PANEL</h1><small>F4 pour fermer</small><h2>Admins</h2>'
  +DB.admins.map(a=>'<div class="it"><span>'+esc(a)+'</span>'+(a=='yuta'?'':'<button onclick="rmA(\''+a+'\')">✕</button>')+'</div>').join('')
  +'<div class="row"><input id="an" placeholder="Pseudo" maxlength="16"><button class="b" onclick="addA()">Ajouter admin</button></div>'
  +'<h2>Pièces</h2><div class="row"><input id="cn" placeholder="Pseudo"><input id="ca" type="number" placeholder="Quantité"></div><button class="b" onclick="giveC()">Donner les pièces</button>'
  +'<h2>Tournoi</h2>'+(t?'<p>En cours : <b>'+esc(t.n)+'</b> ('+Object.keys(t.s).length+' joueurs)</p><button onclick="endT()">Terminer &amp; récompenser (500 / 300 / 100 🪙)</button>':'<small>Aucun tournoi en cours</small>')
- +'<div class="row"><input id="tn" placeholder="Nom du tournoi" maxlength="30"><button class="b" onclick="newT()">Lancer</button></div><h2>Annonce</h2><div class="row"><input id="msg" placeholder="Message pour tous" maxlength="120" value="'+esc(DB.msg&&DB.msg.m?DB.msg.m:'')+'"><button class="b" onclick="setMsg()">Publier</button></div>'+joueursHTML()+'<button onclick="toggleAdm()">Fermer</button>';
+ +'<div class="row"><input id="tn" placeholder="Nom du tournoi" maxlength="30"><button class="b" onclick="newT()">Lancer</button></div><h2>Annonce</h2><div class="row"><input id="msg" placeholder="Message pour tous" maxlength="120" value="'+esc(DB.msg&&DB.msg.m?DB.msg.m:'')+'"><button class="b" onclick="setMsg()">Publier</button></div>'+'<h2>Joueurs ('+Object.keys(DB.u).length+')</h2><input id="jf" placeholder="Chercher un joueur" oninput="JF=this.value.trim().toLowerCase();jlist()" style="width:100%;margin:6px 0"><div id="jl">'+joueursHTML()+'</div><button onclick="toggleAdm()">Fermer</button>';
 }
-function joueursHTML(){const ks=Object.keys(DB.u);return '<h2>Joueurs ('+ks.length+')</h2>'+ks.map(k=>{const u=DB.u[k];return '<div class="it"><span>'+esc(u.n)+(u.ban?' <small style="color:#ff6b6b">(banni)</small>':'')+'<br><small>'+u.coins+' 🪙 · '+u.best+' pts</small></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button onclick="capeP(\''+k+'\')">🎭</button><button onclick="banP(\''+k+'\')">'+(u.ban?'Débannir':'Bannir')+'</button><button onclick="pwP(\''+k+'\')">🔑</button><button onclick="delP(\''+k+'\')">🗑</button></span></div>'}).join('')+'<small>🎭 donner une cape · 🔑 nouveau mot de passe · 🗑 supprimer le compte</small>'}
+function joueursHTML(){const ks=Object.keys(DB.u).filter(k=>!JF||k.includes(JF)||DB.u[k].n.toLowerCase().includes(JF));return ks.map(k=>{const u=DB.u[k];return '<div class="it"><span>'+esc(u.n)+(u.ban?' <small style="color:#ff6b6b">(banni)</small>':'')+'<br><small>'+u.coins+' 🪙 · '+u.best+' pts</small></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button onclick="capeP(\''+k+'\')">🎭</button><button onclick="banP(\''+k+'\')">'+(u.ban?'Débannir':'Bannir')+'</button><button onclick="pwP(\''+k+'\')">🔑</button><button onclick="delP(\''+k+'\')">🗑</button></span></div>'}).join('')+'<small>🎭 donner une cape · 🔑 nouveau mot de passe · 🗑 supprimer le compte</small>'}
 function capeP(k){const c=(prompt('Cape à donner : og, red, cy ou gold')||'').trim();if(!CAPES[c])return toast('Cape inconnue');const u=DB.u[k];if(!u.capes.includes(c))u.capes.push(c);u.cape=c;save();if(k==me)setCape();admR();toast('Cape donnée à '+u.n)}
 function banP(k){if(k==me)return toast('Tu ne peux pas te bannir');const u=DB.u[k];u.ban=!u.ban;save();admR()}
 function pwP(k){const p=prompt('Nouveau mot de passe pour '+DB.u[k].n+' (4 caractères min)');if(!p||p.length<4)return toast('Mot de passe trop court');DB.u[k].pw=hash(p);save();toast('Mot de passe changé')}
@@ -228,31 +231,31 @@ function mkCar(){const g=new THREE.Group();const paint=new THREE.MeshLambertMate
 function mkBarrier(k){const g=new THREE.Group();if(k=='low'){const b=new THREE.Mesh(new THREE.BoxGeometry(1.8,.7,.5),new THREE.MeshBasicMaterial({map:stripeTex}));b.position.y=.35;g.add(b)}else{const bar=new THREE.Mesh(new THREE.BoxGeometry(1.9,.5,.5),new THREE.MeshBasicMaterial({map:stripeTex}));bar.position.y=1.7;g.add(bar);for(const s of[-.85,.85]){const p=new THREE.Mesh(new THREE.BoxGeometry(.12,1.7,.12),new THREE.MeshLambertMaterial({color:0x888899}));p.position.set(s,.85,0);g.add(p)}}return g}
 function add(k,l,z){let o;if(k=='train'){o=mkTrain();o.position.set((l-1)*2,0,z)}else if(k=='car'){o=mkCar();o.position.set((l-1)*2,0,z)}else if(k=='low'||k=='high'){o=mkBarrier(k);o.position.set((l-1)*2,0,z)}else{const g=G[k];o=new THREE.Mesh(g[0],g[1]);o.position.set((l-1)*2,g[2],z)}S.add(o);M.push({o,k})}
 function spawn(){const z=-85,ls=[0,1,2].sort(()=>Math.random()-.5),n=Math.random()<.45?2:1;
- if(MODE=='lava'&&Math.random()<.4){for(let l=0;l<3;l++)add('lava',l,z);return}
  for(let i=0;i<n;i++){const r=Math.random();add(r<.25?'train':r<.45?'car':r<.7?'low':'high',ls[i],z)}
- for(let j=0;j<6;j++)add('c',ls[n],z-j*2);
- if(MODE=='lava'&&Math.random()<.5)add('lava',ls[2],z-6)}
+ for(let j=0;j<6;j++)add('c',ls[n],z-j*2)}
 function clearM(){M.forEach(e=>S.remove(e.o));M.length=0}
 
 /* ---------- Jeu ---------- */
 let strikes=0,st='auth',sp=6,dist=0,T=60,cr=0,inv=0,lane=1,px=0,py=0,vy=0,sl=0,nx=8,shk=0,tour=false,last=performance.now(),clk=0;
 const fmt=t=>{t=Math.max(0,Math.ceil(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
 let spamI;
-let MODE='normal';
+let MODE='normal',lavaOn=false,lavaT=0,GY=0;
+function cdShow(on){const c=$('cd');c.style.display=on?'block':'none';if(on)c.textContent='LAVE DANS 10 s'}
 function play(){showAnn();
  MODE=$('gm')?$('gm').value:'normal';
+ lavaOn=false;lavaT=10;GY=0;cdShow(MODE=='lava');
  const u=DB.u[me];T=0;
  applyMap($('mp').value);applySkin();tour=!!($('tj')&&$('tj').checked);clearM();strikes=0;dist=0;cr=0;inv=0;lane=1;px=0;py=0;vy=0;sl=0;nx=8;sp=14;
  document.querySelectorAll('.ov').forEach(o=>o.classList.remove('on'));$('hud').style.display='flex';st='play';try{au_().resume()}catch(e){}
 }
 function end(why){clearInterval(spamI);
- st='end';$('hud').style.display='none';const u=DB.u[me],s=Math.floor(dist)+cr*10;u.coins+=cr;let m='';
+ st='end';$('hud').style.display='none';cdShow(false);const u=DB.u[me],s=Math.floor(dist)+cr*10;u.coins+=cr;let m='';
  if(MODE=='ranked'){u.rbest=u.rbest||0;if(s>u.rbest){u.rbest=s;m='🏅 Nouveau record classé !<br>'}}else if(s>u.best){u.best=s;m='🔥 Nouveau record !<br>'}
  const t=DB.t.find(x=>x.id==DB.ct);if(tour&&t){t.s[me]=Math.max(t.s[me]||0,s);m+='Score envoyé au tournoi.'}
  save();$('er').innerHTML=(why?'<b style="color:#ff2e97">'+why+'</b><br>':'')+'Temps <b>'+T.toFixed(2)+' s</b><br>Score <b>'+s+'</b><br>'+Math.floor(dist)+' m · +'+cr+' 🪙<br>'+m;show('end');
 }
 function mv(d){if(st=='play')lane=Math.max(0,Math.min(2,lane+d))}
-function jump(){if(st=='play'&&py<=0){vy=14;sl=0}}
+function jump(){if(st=='play'&&py<=GY+.01){vy=(MODE=='lava'&&lavaOn)?18:14;sl=0}}
 function slide(){if(st=='play'){sl=.7;if(py>0)vy=-18}}
 addEventListener('keydown',e=>{
  if(e.key=='F4'){e.preventDefault();toggleAdm();return}
@@ -269,19 +272,23 @@ function loop(now){
  requestAnimationFrame(loop);
  let dt=Math.min(.05,(now-last)/1000);last=now;if(st=='paused')dt=0;
  const run=st=='play';if(!run&&st!='paused')sp=6;
- if(run){sp=Math.min(32,14+dist*.008);T+=dt;inv=Math.max(0,inv-dt);if(strikes&&!inv)strikes=0;dist+=sp*dt;nx-=sp*dt;if(nx<=0){spawn();nx=14+Math.random()*10}}
+ if(run){sp=Math.min(32,14+dist*.008);T+=dt;inv=Math.max(0,inv-dt);if(strikes&&!inv)strikes=0;dist+=sp*dt;nx-=sp*dt;if(nx<=0){if(lavaOn)add('train',Math.floor(Math.random()*3),-85);else spawn();nx=lavaOn?6+Math.random()*4:14+Math.random()*10}}
  clk+=dt;rt.offset.y+=sp*dt/5;
  B.forEach(b=>{b.position.z+=sp*dt;if(b.position.z>15)b.position.z-=200});
+ if(run&&MODE=='lava'){if(!lavaOn){lavaT-=dt;$('cd').textContent='LAVE DANS '+Math.max(0,Math.ceil(lavaT))+' s';if(lavaT<=0){lavaOn=true;cdShow(false);q.fillStyle='#8a1a00';q.fillRect(0,0,128,128);q.fillStyle='#ffb000';q.fillRect(43,0,3,70);q.fillRect(82,0,3,70);rt.needsUpdate=true;add('train',0,-30);add('train',1,-30);add('train',2,-30);toast('🔥 LA LAVE ! Monte sur un train')}}}
+ GY=0;if(run&&MODE=='lava'&&lavaOn){for(const e of M)if(e.k=='train'&&Math.abs(e.o.position.x-px)<1&&Math.abs(e.o.position.z)<3.2)GY=3.5}
  // joueur
  px+=((lane-1)*2-px)*Math.min(1,dt*14);
- if(py>0||vy>0){vy-=38*dt;py+=vy*dt;if(py<=0){py=0;vy=0}}
+ if(py<GY&&vy<=0){py=GY;vy=0}
+ if(py>GY||vy>0){vy-=38*dt;py+=vy*dt;if(py<=GY){py=GY;vy=0}}
+ if(run&&MODE=='lava'&&lavaOn&&GY==0&&py<=0&&st=='play'){end('🔥 Tu es tombé dans la lave !')}
  if(sl>0)sl-=dt;
  P.position.set(px,py,0);P.scale.y=sl>0?.5:1;P.visible=inv<=0||Math.floor(inv*12)%2==0;
  const sw=run&&py<=0?Math.sin(clk*16)*.7:0;legs[0].rotation.x=sw;legs[1].rotation.x=-sw;arms[0].rotation.x=-sw*.8;arms[1].rotation.x=sw*.8;cape.rotation.x=.22+Math.sin(clk*10)*.08;{const pa=capeG.attributes.position;for(let i=0;i<pa.count;i++)pa.setZ(i,Math.sin(clk*7+pa.getY(i)*4)*.08);pa.needsUpdate=true}
  // objets
  for(let i=M.length-1;i>=0;i--){const e=M[i],o=e.o;o.position.z+=sp*dt;const z=o.position.z;
   if(e.k=='c')o.rotation.y+=dt*4;
-  if(run&&Math.abs(o.position.x-px)<.9){
+  if(run&&Math.abs(o.position.x-px)<.9&&!(e.k=='train'&&lavaOn)){
    if(e.k=='c'){if(Math.abs(z)<.8&&py<1.4){S.remove(o);M.splice(i,1);cr++;tone(900,.1,'square',.1,0,1500);continue}}
    else if(e.k=='lava'){if(!e.h&&Math.abs(z)<1.2&&py<.3){e.h=1;shk=.5;tone(120,.5,'sawtooth',.25,0,60);end('🔥 Tu as touché la lave !')}}
    else if(!e.h&&Math.abs(z)<(e.k=='train'?3.4:e.k=='car'?2:.7)&&(e.k=='car'||e.k=='train'||(e.k=='low'&&py<.7)||(e.k=='high'&&sl<=0&&py<1.95))){e.h=1;strikes++;inv=1.5;shk=.35;tone(160,.25,'sawtooth',.2,0,45);if(strikes>=2)end('Tu t\'es pris 2 obstacles de suite')}
