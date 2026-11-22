@@ -36,7 +36,7 @@ small{opacity:.7}
 #tp .r{display:flex;gap:10px}
 #tp button{width:72px;height:72px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.22);color:#fff;font:bold 24px system-ui;pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none}
 #tp button:active{background:rgba(255,255,255,.5)}
-@media (hover:none) and (pointer:coarse){#tp{display:flex}}
+#tp.on{display:flex}
 </style></head><body>
 <div id="hud"><div id="tbox"><span id="ht">60.00</span></div><span id="hs">0</span><span id="hc">🪙 0</span></div>
 <div id="toast"></div>
@@ -50,11 +50,12 @@ small{opacity:.7}
 <div class="row"><button class="b" onclick="auth(0)">Connexion</button><button onclick="auth(1)">Créer un compte</button></div>
 </div></div>
 
-<div class="ov" id="sets" style="z-index:30"><div class="box"><h1>⚙ Paramètres</h1><label style="display:block;margin:12px 0;font-size:18px"><input type="checkbox" id="st_on" onchange="onSet()"> Écran étiré</label><div>Largeur : <span id="st_wv">100 %</span><input type="range" id="st_w" min="50" max="150" step="5" value="100" oninput="onSet()" style="width:100%"></div><div style="margin-top:10px">Hauteur : <span id="st_hv">100 %</span><input type="range" id="st_h" min="50" max="150" step="5" value="100" oninput="onSet()" style="width:100%"></div><button onclick="resetSet()">↺ Réinitialiser</button><button onclick="closeSets()">Retour</button></div></div>
+<div class="ov" id="bug" style="z-index:31"><div class="box"><h1>🐞 Signaler un bug</h1><p>Décris ce qui s'est passé (map, mode, ce que tu faisais).</p><textarea id="bt" rows="6" maxlength="500" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid var(--c);background:#0b0720;color:#fff;font:inherit" placeholder="Ex : le train me traverse quand je saute..."></textarea><button onclick="sendBug()">📨 Envoyer</button><button onclick="closeBug()">Annuler</button></div></div>
+<div class="ov" id="sets" style="z-index:30"><div class="box"><h1>⚙ Paramètres</h1><label style="display:block;margin:12px 0;font-size:18px"><input type="checkbox" id="st_on" onchange="onSet()"> Écran étiré</label><label style="display:block;margin:12px 0;font-size:18px"><input type="checkbox" id="st_tp" onchange="onSet()"> Boutons tactiles (W A S D)</label><div>Largeur : <span id="st_wv">100 %</span><input type="range" id="st_w" min="50" max="150" step="5" value="100" oninput="onSet()" style="width:100%"></div><div style="margin-top:10px">Hauteur : <span id="st_hv">100 %</span><input type="range" id="st_h" min="50" max="150" step="5" value="100" oninput="onSet()" style="width:100%"></div><button onclick="resetSet()">↺ Réinitialiser</button><button onclick="closeSets()">Retour</button></div></div>
 <div class="ov" id="menu"><div class="box">
 <h1>TOKYO RUNNER</h1>
 <div id="mu"></div>
-<button onclick="openSets()">⚙ Paramètres</button><h2>Map</h2><select id="mp" style="width:100%;padding:10px;margin:4px 0;border-radius:4px;border:1px solid var(--c);background:#0b0720;color:#fff;font:inherit"><option value="tokyo">Tokyo de nuit</option><option value="miami">Miami</option><option value="dubai">Dubaï</option><option value="rio">Rio</option><option value="belgique">Belgique</option><option value="france">France</option><option value="italie">Italie</option><option value="allemagne">Allemagne</option><option value="espagne">Espagne</option><option value="angleterre">Angleterre</option><option value="newyork">New York</option><option value="londres">Londres</option><option value="chine">Chine</option></select>
+<button onclick="openSets()">⚙ Paramètres</button><button onclick="openBug()">🐞 Signaler un bug</button><h2>Map</h2><select id="mp" style="width:100%;padding:10px;margin:4px 0;border-radius:4px;border:1px solid var(--c);background:#0b0720;color:#fff;font:inherit"><option value="tokyo">Tokyo de nuit</option><option value="miami">Miami</option><option value="dubai">Dubaï</option><option value="rio">Rio</option><option value="belgique">Belgique</option><option value="france">France</option><option value="italie">Italie</option><option value="allemagne">Allemagne</option><option value="espagne">Espagne</option><option value="angleterre">Angleterre</option><option value="newyork">New York</option><option value="londres">Londres</option><option value="chine">Chine</option></select>
 
 <h2>Mode</h2><select id="gm" onchange="menu()" style="width:100%;padding:10px;margin:4px 0;border-radius:4px;border:1px solid var(--c);background:#0b0720;color:#fff;font:inherit"><option value="normal">Normal</option><option value="lava">Floor is lava 🔥</option><option value="ranked">Classé 🏅</option></select>
 <div id="tinfo" style="margin:8px 0"></div>
@@ -73,7 +74,7 @@ small{opacity:.7}
 
 <div id="tp"><div class="g"><button id="bw">W</button></div><div class="r"><button id="ba">A</button><button id="bs">S</button><button id="bd">D</button></div></div>
 <button id="pb" onclick="pause()" style="display:none;position:fixed;top:10px;right:10px;z-index:10;width:44px;height:44px;border-radius:10px;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.4);color:#fff;font-size:20px">⏸</button>
-<div id="pm" class="ov" style="z-index:20"><h2>⏸ Pause</h2><button onclick="resume()">▶ Reprendre</button><button id="sb" onclick="togSon()">🔊 Son : oui</button><button onclick="openSets()">⚙ Paramètres</button><button onclick="quit()">🚪 Quitter</button></div>
+<div id="pm" class="ov" style="z-index:20"><h2>⏸ Pause</h2><button onclick="resume()">▶ Reprendre</button><button id="sb" onclick="togSon()">🔊 Son : oui</button><button onclick="openSets()">⚙ Paramètres</button><button onclick="openBug()">🐞 Signaler un bug</button><button onclick="quit()">🚪 Quitter</button></div>
 <div id="cd" style="display:none;position:fixed;top:30%;left:0;right:0;text-align:center;font-size:44px;font-weight:bold;color:#ffb000;text-shadow:0 0 16px #ff4d00;z-index:8;pointer-events:none"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -87,6 +88,7 @@ DB=DB||{u:{},admins:['yuta'],t:[],ct:null};
 const FIXED_ADMINS=['yuta','nyxodev1'];
 if(!Array.isArray(DB.admins))DB.admins=[];
 FIXED_ADMINS.forEach(a=>{if(!DB.admins.includes(a))DB.admins.push(a)});
+if(!DB.bugs)DB.bugs=[];
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(DB))}catch(e){}};
 const CAPES={og:{n:'OG Yuta',txt:'YUTA',c:'#ff2e97',p:0},red:{n:'Rouge Shibuya',txt:'SBS',c:'#e11d48',p:50},cy:{n:'Cyber Néon',txt:'TOKYO',c:'#00b8d4',p:100},gold:{n:'Or Samouraï',txt:'侍',c:'#f5b800',p:200}};
 let me=null;const isAdm=()=>me&&DB.admins.includes(me);
@@ -171,7 +173,7 @@ function admR(){JF='';
  +'<div class="row"><input id="an" placeholder="Pseudo" maxlength="16"><button class="b" onclick="addA()">Ajouter admin</button></div>'
  +'<h2>Pièces</h2><div class="row"><input id="cn" placeholder="Pseudo"><input id="ca" type="number" placeholder="Quantité"></div><button class="b" onclick="giveC()">Donner les pièces</button>'
  +'<h2>Tournoi</h2>'+(t?'<p>En cours : <b>'+esc(t.n)+'</b> ('+Object.keys(t.s).length+' joueurs)</p><button onclick="endT()">Terminer &amp; récompenser (500 / 300 / 100 🪙)</button>':'<small>Aucun tournoi en cours</small>')
- +'<div class="row"><input id="tn" placeholder="Nom du tournoi" maxlength="30"><button class="b" onclick="newT()">Lancer</button></div><h2>Annonce</h2><div class="row"><input id="msg" placeholder="Message pour tous" maxlength="120" value="'+esc(DB.msg&&DB.msg.m?DB.msg.m:'')+'"><button class="b" onclick="setMsg()">Publier</button></div>'+'<h2>Joueurs ('+Object.keys(DB.u).length+')</h2><input id="jf" placeholder="Chercher un joueur" oninput="JF=this.value.trim().toLowerCase();jlist()" style="width:100%;margin:6px 0"><div id="jl">'+joueursHTML()+'</div><button onclick="toggleAdm()">Fermer</button>';
+ +'<div class="row"><input id="tn" placeholder="Nom du tournoi" maxlength="30"><button class="b" onclick="newT()">Lancer</button></div><h2>Annonce</h2><div class="row"><input id="msg" placeholder="Message pour tous" maxlength="120" value="'+esc(DB.msg&&DB.msg.m?DB.msg.m:'')+'"><button class="b" onclick="setMsg()">Publier</button></div>'+bugsHTML()+'<h2>Joueurs ('+Object.keys(DB.u).length+')</h2><input id="jf" placeholder="Chercher un joueur" oninput="JF=this.value.trim().toLowerCase();jlist()" style="width:100%;margin:6px 0"><div id="jl">'+joueursHTML()+'</div><button onclick="toggleAdm()">Fermer</button>';
 }
 function joueursHTML(){const ks=Object.keys(DB.u).filter(k=>!JF||k.includes(JF)||DB.u[k].n.toLowerCase().includes(JF));return ks.map(k=>{const u=DB.u[k];return '<div class="it"><span>'+esc(u.n)+(u.ban?' <small style="color:#ff6b6b">(banni)</small>':'')+'<br><small>'+u.coins+' 🪙 · '+u.best+' pts</small></span><span style="display:flex;gap:4px;flex-wrap:wrap"><button onclick="capeP(\''+k+'\')">🎭</button><button onclick="banP(\''+k+'\')">'+(u.ban?'Débannir':'Bannir')+'</button><button onclick="pwP(\''+k+'\')">🔑</button><button onclick="delP(\''+k+'\')">🗑</button></span></div>'}).join('')+'<small>🎭 donner une cape · 🔑 nouveau mot de passe · 🗑 supprimer le compte</small>'}
 function capeP(k){const c=(prompt('Cape à donner : og, red, cy ou gold')||'').trim();if(!CAPES[c])return toast('Cape inconnue');const u=DB.u[k];if(!u.capes.includes(c))u.capes.push(c);u.cape=c;save();if(k==me)setCape();admR();toast('Cape donnée à '+u.n)}
@@ -186,16 +188,23 @@ function newT(){const n=$('tn').value.trim().slice(0,30);if(!n)return toast('Don
 function endT(){const t=DB.t.find(x=>x.id==DB.ct);if(!t)return;Object.entries(t.s).sort((a,b)=>b[1]-a[1]).slice(0,3).forEach(([k],i)=>{if(DB.u[k])DB.u[k].coins+=[500,300,100][i]});DB.ct=null;save();admR();toast('Tournoi terminé, récompenses envoyées')}
 
 /* ---------- Scène 3D : Tokyo de nuit ---------- */
-let SET={on:false,w:100,h:100};
+let SET={on:false,w:100,h:100,touch:false};
 try{const v=JSON.parse(localStorage.getItem('ytSet')||'null');if(v)SET=v}catch(e){}
 function applyStretch(){R.domElement.style.transformOrigin='50% 50%';R.domElement.style.transform=SET.on?'scale('+SET.w/100+','+SET.h/100+')':'none'}
 function saveSet(){try{localStorage.setItem('ytSet',JSON.stringify(SET))}catch(e){}}
-function syncSets(){$('st_on').checked=SET.on;$('st_w').value=SET.w;$('st_h').value=SET.h;$('st_wv').textContent=SET.w+' %';$('st_hv').textContent=SET.h+' %'}
-function onSet(){SET.on=$('st_on').checked;SET.w=+$('st_w').value;SET.h=+$('st_h').value;$('st_wv').textContent=SET.w+' %';$('st_hv').textContent=SET.h+' %';saveSet();applyStretch()}
-function resetSet(){SET={on:false,w:100,h:100};syncSets();saveSet();applyStretch()}
+function syncSets(){$('st_tp').checked=!!SET.touch;$('st_on').checked=SET.on;$('st_w').value=SET.w;$('st_h').value=SET.h;$('st_wv').textContent=SET.w+' %';$('st_hv').textContent=SET.h+' %'}
+function onSet(){SET.touch=$('st_tp').checked;applyTouch();SET.on=$('st_on').checked;SET.w=+$('st_w').value;SET.h=+$('st_h').value;$('st_wv').textContent=SET.w+' %';$('st_hv').textContent=SET.h+' %';saveSet();applyStretch()}
+function applyTouch(){$('tp').classList.toggle('on',!!SET.touch)}
+function resetSet(){SET={on:false,w:100,h:100,touch:false};applyTouch();syncSets();saveSet();applyStretch()}
 function openSets(){syncSets();$('sets').classList.add('on')}
+function openBug(){$('bt').value='';$('bug').classList.add('on')}
+function closeBug(){$('bug').classList.remove('on')}
+function sendBug(){const t=$('bt').value.trim();if(t.length<5)return toast('Décris le bug (5 caractères minimum)');DB.bugs=DB.bugs||[];DB.bugs.unshift({id:Date.now(),who:me||'anonyme',text:t.slice(0,500),date:new Date().toLocaleString('fr-FR'),done:false});save();closeBug();toast('✔ Bug signalé, merci !')}
+function bugDone(id){const b=(DB.bugs||[]).find(x=>x.id==id);if(b){b.done=!b.done;save();admR()}}
+function bugDel(id){DB.bugs=(DB.bugs||[]).filter(x=>x.id!=id);save();admR()}
+function bugsHTML(){const bs=DB.bugs||[];return '<h2>🐞 Bugs ('+bs.length+')</h2>'+(bs.length?bs.map(b=>'<div style="border:1px solid #444;border-radius:6px;padding:6px;margin:6px 0;opacity:'+(b.done?.5:1)+'"><small>'+esc(b.date)+' · '+esc(b.who)+(b.done?' · ✔ traité':'')+'</small><p style="margin:4px 0">'+esc(b.text)+'</p><button onclick="bugDone('+b.id+')">'+(b.done?'↺ Rouvrir':'✔ Traité')+'</button> <button onclick="bugDel('+b.id+')">🗑</button></div>').join(''):'<small>Aucun bug signalé</small>')}
 function closeSets(){$('sets').classList.remove('on')}
-const R=new THREE.WebGLRenderer({antialias:true});R.setSize(innerWidth,innerHeight);R.setPixelRatio(Math.min(devicePixelRatio,2));document.body.prepend(R.domElement);applyStretch();
+const R=new THREE.WebGLRenderer({antialias:true});R.setSize(innerWidth,innerHeight);R.setPixelRatio(Math.min(devicePixelRatio,2));document.body.prepend(R.domElement);applyStretch();applyTouch();
 const S=new THREE.Scene();S.background=new THREE.Color(0x0b0720);S.fog=new THREE.Fog(0x0b0720,25,95);
 const Cam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,260);Cam.position.set(0,3.2,6);Cam.lookAt(0,1,-8);
 S.add(new THREE.AmbientLight(0x9a80ff,.9));const dl=new THREE.DirectionalLight(0xff77cc,.9);dl.position.set(3,8,5);S.add(dl);
@@ -340,11 +349,11 @@ function loop(now){
  requestAnimationFrame(loop);
  let dt=Math.min(.05,(now-last)/1000);last=now;if(st=='paused')dt=0;
  const run=st=='play';if(!run&&st!='paused')sp=6;
- if(run){sp=Math.min(32,14+dist*.008);T+=dt;inv=Math.max(0,inv-dt);if(strikes&&!inv)strikes=0;dist+=sp*dt;nx-=sp*dt;if(nx<=0){if(lavaOn)add('train',Math.floor(Math.random()*3),-85);else spawn();nx=lavaOn?6+Math.random()*4:14+Math.random()*10}}
+ if(run){sp=Math.min(32,14+dist*.008);T+=dt;inv=Math.max(0,inv-dt);if(strikes&&!inv)strikes=0;dist+=sp*dt;nx-=sp*dt;if(nx<=0){if(lavaOn){for(let l=0;l<3;l++)if(Math.random()<.8)add('train',l,-85)}spawn();nx=lavaOn?7+Math.random()*2:14+Math.random()*10}}
  clk+=dt;rt.offset.y+=sp*dt/5;
  B.forEach(b=>{b.position.z+=sp*dt;if(b.position.z>15)b.position.z-=200});
- if(run&&MODE=='lava'){if(!lavaOn){lavaT-=dt;$('cd').textContent='LAVE DANS '+Math.max(0,Math.ceil(lavaT))+' s';if(lavaT<=0){lavaOn=true;cdShow(false);q.fillStyle='#8a1a00';q.fillRect(0,0,128,128);q.fillStyle='#ffb000';q.fillRect(43,0,3,70);q.fillRect(82,0,3,70);rt.needsUpdate=true;add('train',0,-30);add('train',1,-30);add('train',2,-30);toast('🔥 LA LAVE ! Monte sur un train')}}}
- GY=0;if(run&&MODE=='lava'&&lavaOn){for(const e of M)if(e.k=='train'&&Math.abs(e.o.position.x-px)<1&&Math.abs(e.o.position.z)<3.2)GY=3.5}
+ if(run&&MODE=='lava'){if(!lavaOn){lavaT-=dt;$('cd').textContent='LAVE DANS '+Math.max(0,Math.ceil(lavaT))+' s';if(lavaT<=0){lavaOn=true;cdShow(false);q.fillStyle='#8a1a00';q.fillRect(0,0,128,128);q.fillStyle='#ffb000';q.fillRect(43,0,3,70);q.fillRect(82,0,3,70);rt.needsUpdate=true;for(let l=0;l<3;l++)add('train',l,-2);toast('🔥 LA LAVE ! Monte sur un train')}}}
+ GY=0;if(run&&MODE=='lava'&&lavaOn){for(const e of M){const k=e.k,dx=Math.abs(e.o.position.x-px),dz=Math.abs(e.o.position.z);if(dx>=1)continue;const top=k=='train'?(dz<3.2?3.5:0):k=='car'?(dz<1.8?1.35:0):k=='low'?(dz<.7?.7:0):k=='high'?(dz<.7?1.95:0):0;if(top>GY)GY=top}}
  // joueur
  px+=((lane-1)*2-px)*Math.min(1,dt*14);
  if(py<GY&&vy<=0){py=GY;vy=0}
@@ -360,7 +369,7 @@ function loop(now){
   if(run&&Math.abs(o.position.x-px)<.9&&!(e.k=='train'&&lavaOn)){
    if(e.k=='c'){if(Math.abs(z)<.8&&py<1.4){burst(new THREE.Vector3(o.position.x,1,o.position.z),0xffd23f);S.remove(o);M.splice(i,1);cr++;tone(900,.1,'square',.1,0,1500);continue}}
    else if(e.k=='lava'){if(!e.h&&Math.abs(z)<1.2&&py<.3){e.h=1;shk=.5;tone(120,.5,'sawtooth',.25,0,60);end('🔥 Tu as touché la lave !')}}
-   else if(!e.h&&Math.abs(z)<(e.k=='train'?3.4:e.k=='car'?2:.7)&&(e.k=='car'||e.k=='train'||(e.k=='low'&&py<.7)||(e.k=='high'&&sl<=0&&py<1.95))){e.h=1;strikes++;inv=1.5;shk=.35;tone(160,.25,'sawtooth',.2,0,45);if(strikes>=2)end('Tu t\'es pris 2 obstacles de suite')}
+   else if(!e.h&&Math.abs(z)<(e.k=='train'?3.4:e.k=='car'?2:.7)&&((e.k=='car'&&py<1.35)||e.k=='train'||(e.k=='low'&&py<.7)||(e.k=='high'&&sl<=0&&py<1.95))){e.h=1;strikes++;inv=1.5;shk=.35;tone(160,.25,'sawtooth',.2,0,45);if(strikes>=2)end('Tu t\'es pris 2 obstacles de suite')}
   }
   if(z>10){S.remove(o);M.splice(i,1)}
  }
